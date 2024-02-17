@@ -1,0 +1,46 @@
+import pandas as pd 
+df = pd.read_csv("XXXXX.csv")
+Q2 = pd.read_csv("XXXXX.csv")
+key=pd.read_csv("XXXXXX.csv")
+#read CSV files from network folder into program
+
+
+df['SVDAT_RAW'] = pd.to_datetime(df['SVDAT_RAW'], format="%d-%b-%y")
+Q2['Collection Date'] = pd.to_datetime(Q2['Collection Date'], format="%d-%b-%y")
+#tell program how to read dates in certain input file column so that this can be filtered later.
+
+df2=pd.concat([df, Q2], axis=1)
+#append EDC and Q2 file along the column axis
+countif=[]
+
+for i in df2.index:
+    countif.append(len(df2[(df2['Screen ID']==df2.at[i,'Subject']) & (df2['Collection Date']==df2.at[i,'SVDAT_RAW'])] ))
+df2['Samples Recevied at Q2'] = countif
+#iterate through each row in now combined file and do a count if basically for 
+#where screening ID matches subject and collection date matches SVDAT_RAW. write result to new column
+
+
+df3=(df2.loc[(df2['SVDAT_RAW'] >= '1-SEP-23') & (df2['SVDAT_RAW'] <= '31-JAN-24')])
+#filter by date of visit
+
+def match_key(x):
+    #e is a dataframe type, so use ".values[0]" to extract the actual value.
+    #is in creates a boolean column that is multipled vs the following defined column to create a 
+    e=key[key['Visit'].isin([x])]['Number of samples']
+    return e.values[0]
+
+
+df4=df3.assign(samexp=df3['InstanceName'].apply(lambda x:match_key(x)))
+#pass values to our match key function to return expected samples 
+
+df5=df4[['Subject','InstanceName','SVDAT_RAW','Samples Recevied at Q2', "samexp"]]
+#define columns desired in new output
+
+
+
+from pathlib import Path  
+filepath = Path('XXXXX.xls')  
+filepath.parent.mkdir(parents=True, exist_ok=True)  
+#define output file location
+df5.to_excel(filepath) 
+#output excel file              
