@@ -1,7 +1,7 @@
 import pandas as pd 
-df = pd.read_csv("XXXXX.csv")
-Q2 = pd.read_csv("XXXXX.csv")
-key=pd.read_csv("XXXXXX.csv")
+key = pd.read_csv(r"XXXXXXXX")
+Q2 = pd.read_csv(r"XXXXXXXXX")
+df=pd.read_csv(r"XXXXXXXXXXXX")
 #read CSV files from network folder into program
 
 
@@ -9,18 +9,20 @@ df['SVDAT_RAW'] = pd.to_datetime(df['SVDAT_RAW'], format="%d-%b-%y")
 Q2['Collection Date'] = pd.to_datetime(Q2['Collection Date'], format="%d-%b-%y")
 #tell program how to read dates in certain input file column so that this can be filtered later.
 
-df2=pd.concat([df, Q2], axis=1)
-#append EDC and Q2 file along the column axis
+
+
 countif=[]
 
-for i in df2.index:
-    countif.append(len(df2[(df2['Screen ID']==df2.at[i,'Subject']) & (df2['Collection Date']==df2.at[i,'SVDAT_RAW'])] ))
-df2['Samples Recevied at Q2'] = countif
+for i in df.index:
+    coll_date=df.at[i,'SVDAT_RAW']
+    subject=df.at[i,'Subject']   
+    countif.append(len(Q2[(Q2['Screen ID']==subject) & (Q2['Collection Date']==coll_date)] ))
+df['Samples Recevied at Q2'] = countif
 #iterate through each row in now combined file and do a count if basically for 
 #where screening ID matches subject and collection date matches SVDAT_RAW. write result to new column
 
 
-df3=(df2.loc[(df2['SVDAT_RAW'] >= '1-SEP-23') & (df2['SVDAT_RAW'] <= '31-JAN-24')])
+df1=(df.loc[(df['SVDAT_RAW'] >= '1-SEP-23') & (df['SVDAT_RAW'] <= '31-JAN-24')])
 #filter by date of visit
 
 def match_key(x):
@@ -30,17 +32,17 @@ def match_key(x):
     return e.values[0]
 
 
-df4=df3.assign(samexp=df3['InstanceName'].apply(lambda x:match_key(x)))
+df1=df1.assign(samexp=df1['InstanceName'].apply(lambda x:match_key(x)))
 #pass values to our match key function to return expected samples 
 
-df5=df4[['Subject','InstanceName','SVDAT_RAW','Samples Recevied at Q2', "samexp"]]
+Report=df1[['Subject','InstanceName','SVDAT_RAW','Samples Recevied at Q2', "samexp"]]
 #define columns desired in new output
 
 
 
 from pathlib import Path  
-filepath = Path('XXXXX.xls')  
+filepath = Path(r"XXXXXXXXXX.csv")  
 filepath.parent.mkdir(parents=True, exist_ok=True)  
 #define output file location
-df5.to_excel(filepath) 
-#output excel file              
+Report.to_csv(filepath) 
+#output excel file            
